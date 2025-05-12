@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  appnode:
+    image: docker-example-appnode
+    container_name: appnodeV2
+    ports:
+      - "3000:3000"
+    networks:
+      - convisoNet
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadbV2
+    environment:
+      MARIADB_DATABASE: convisoDB
+      MARIADB_USER: admin
+      MARIADB_PASSWORD_FILE: /run/secrets/mariadb_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    secrets:
+      - mariadb_password
+      - mariadb_root_password
+    volumes:
+      - convisoV:/var/lib/mysql
+    networks:
+      - convisoNet
+
+volumes:
+  convisoV:
+
+networks:
+  convisoNet:
+
+secrets:
+  mariadb_password:
+    external: true
+  mariadb_root_password:
+    external: true
