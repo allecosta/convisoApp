@@ -78,7 +78,7 @@ jobs:
       - name: Container Scan
         run: |
           export IMAGE_NAME="vboxuser10/conviso-ci"
-          export IMAGE_TAG=latest
+          export IMAGE_TAG="${{ needs.build.outputs.sha }}"
           conviso container run "$IMAGE_NAME:$IMAGE_TAG" --company-id 908
 
 
