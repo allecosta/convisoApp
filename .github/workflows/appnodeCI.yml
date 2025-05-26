@@ -1,10 +1,8 @@
-## CI -> exec todos os testes, cria e publica a imagem (docker)
-  ## github repo de codigo
-  ## versionador de imagens docker (dockerhub, ECR, ACR etc ...)
-
-## CD -> pega imagem do docker, scan de imagem, subir essa imagem no ambiente
-
-## github.com/marketplace/actions/
+# CI -> exec todos os testes, cria e publica a imagem (docker)
+# versionador de imagens docker (dockerhub, ECR, ACR etc ...)
+# CD -> pega imagem do docker, scan de imagem, subir essa imagem no ambiente
+#
+# github.com/marketplace/actions/
 
 name: appnodeCI
 
@@ -59,7 +57,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Run AST
         run: conviso ast run --vulnerability-auto-close --company-id 908
 
