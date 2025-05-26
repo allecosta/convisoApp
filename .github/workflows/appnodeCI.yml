@@ -47,7 +47,7 @@ jobs:
       run: docker build -t vboxuser10/conviso-ci:${{steps.generate_tag.outputs.sha}} .
 
     - name: Push image
-      run: docker push vboxuser10/conviso-ci-:${{steps.generate_tag.outputs.sha}}
+      run: docker push vboxuser10/conviso-ci:${{steps.generate_tag.outputs.sha}}
 
 
 
