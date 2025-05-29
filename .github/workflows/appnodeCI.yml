@@ -1,12 +1,6 @@
-# CI -> exec todos os testes, cria e publica a imagem (docker)
-# versionador de imagens docker (dockerhub, ECR, ACR etc ...)
-# CD -> pega imagem do docker, scan de imagem, subir essa imagem no ambiente
-#
-# github.com/marketplace/actions/
-
 name: appnodeCI
 
-on: ## quando vai rodar o workflow
+on: 
   push:
     branches:
       - main
@@ -59,6 +53,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run AST
         run: conviso ast run --vulnerability-auto-close --company-id 908
+
+      - name: Security Gate Check
+        run: |
+          cat <<EOF > security-rules.yml
+          rules:
+            - from: any
+              severity:
+                critical:
+                  maximum: 0
+                high:
+                  maximum: 1
+                medium:
+                  maximum: 0
+                low:
+                  maximum: 0
+          EOF
+          conviso vulnerability assert-security-rules --rules-file security-rules.yml --company-id 908
 
   conviso-container-scan:
     name: "Conviso Container Scan"
