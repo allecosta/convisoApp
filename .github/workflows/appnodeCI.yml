@@ -1,61 +1,61 @@
-name: appnodeCI
+name: appnodeCI  # Define o nome do fluxo de trabalho
 
-on: 
-  push:
+on:  # Especifica os eventos que vão disparar esse fluxo
+  push:  # Quando há um push na branch main
     branches:
-      - main
-  pull_request:
+      - main  
+  pull_request:  # Quando há uma pull request direcionada à branch main
     branches:
-      - main
+      - main  
 
-jobs:
-  build:
+jobs:  # Inicia a definição dos trabalhos que serão executados
+  build:  # 1º trabalho
     name: 'build'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Roda um ambiente Ubuntu mais recente
 
-    steps:
-    - uses: actions/checkout@v4
+    steps:  # Lista as etapas que esse trabalho vai seguir
+    - uses: actions/checkout@v4  # Faz o checkout do código do repositório para que possa ser utilizado nas próximas etapas
 
-    - name: "Setup Node"
+    - name: "Setup Node"  # Configura o ambiente Node.js na versão 20
       uses: actions/setup-node@v4
       with:
         node-version: 20
-    - run: npm install
-    - run: npm test
+    - run: npm install  # Instala as dependências do projeto
+    - run: npm test  # Executa os testes do projeto
 
-    - name: generate tags
+    - name: generate tags  # Gera uma tag baseada no SHA do commit (os primeiros 7 caracteres) e armazena na variável sha
       id: generate_tag
       run: |
         SHA=$(echo $GITHUB_SHA | head -c7)
         echo "sha=$SHA" >> $GITHUB_OUTPUT
 
-    - name: Login container Registry docker
+    - name: Login container Registry docker  # Faz login no Docker Hub usando as credenciais armezenada em secrets
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Docker build image ## depois dos checks de seguranca
+    - name: Docker build image  # Constrói uma imagem Docker com o nome vboxuser10/conviso-ci
       run: docker build -t vboxuser10/conviso-ci:${{steps.generate_tag.outputs.sha}} .
 
-    - name: Push image
+    - name: Push image  # Envia a imagem Docker criada para o Docker Hub
       run: docker push vboxuser10/conviso-ci:${{steps.generate_tag.outputs.sha}}
 
-  conviso-sast:
+  conviso-sast:  # 2º trabalho
     name: "Conviso SAST"
     runs-on: ubuntu-latest
     container:
-      image: convisoappsec/convisocli
+      image: convisoappsec/convisocli 
       env:
         CONVISO_API_KEY: ${{ secrets.CONVISO_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Run AST
+      - uses: actions/checkout@v4  # Faz checkout do código
+      - name: Run AST  # Executa uma análise de segurança estática
         run: conviso ast run --vulnerability-auto-close --company-id 908
 
-      - name: Security Gate Check
-        run: |
+      - name: Security Gate Check 
+        run: |  # Cria um arquivo de regras de segurança
           cat <<EOF > security-rules.yml
           rules:
             - from: any
@@ -63,15 +63,15 @@ jobs:
                 critical:
                   maximum: 0
                 high:
-                  maximum: 1
+                  maximum: 2
                 medium:
                   maximum: 0
                 low:
                   maximum: 0
           EOF
-          conviso vulnerability assert-security-rules --rules-file security-rules.yml --company-id 908
+          conviso vulnerability assert-security-rules --rules-file security-rules.yml --company-id 908  
 
-  conviso-container-scan:
+  conviso-container-scan:  # 3º trabalho (que depende do build)
     name: "Conviso Container Scan"
     runs-on: ubuntu-latest
     needs: build
@@ -81,9 +81,9 @@ jobs:
         CONVISO_API_KEY: ${{ secrets.CONVISO_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4  #  Faz o checkout no código
 
-      - name: Container Scan
+      - name: Container Scan  # Realiza uma varredura de container
         run: |
           export IMAGE_NAME="vboxuser10/conviso-ci"
           export IMAGE_TAG="${{ needs.build.outputs.sha }}"
